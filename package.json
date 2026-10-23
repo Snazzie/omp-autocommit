@@ -1,0 +1,30 @@
+{
+  "name": "@snazzie/omp-autocommit",
+  "version": "0.1.0",
+  "description": "Task-scoped automatic Git commits for Oh My Pi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/snazzie/omp-autocommit.git"
+  },
+  "type": "module",
+  "files": [
+    ".omp-plugin/",
+    "src/",
+    "rules/",
+    "README.md"
+  ],
+  "omp": {
+    "extensions": ["./src/index.ts"]
+  },
+  "scripts": {
+    "test": "bun test",
+    "test:e2e": "bun test/e2e.ts"
+  },
+  "peerDependencies": {
+    "@oh-my-pi/pi-coding-agent": ">=18.4.12"
+  },
+
+  "publishConfig": {
+    "access": "public"
+  }
+}

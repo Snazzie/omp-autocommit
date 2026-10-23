@@ -1,0 +1,13 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "omp-autocommit",
+  "owner": {
+    "name": "snazzie"
+  },
+  "plugins": [
+    {
+      "name": "autogit",
+      "source": "./"
+    }
+  ]
+}
