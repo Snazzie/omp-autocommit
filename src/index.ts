@@ -147,15 +147,16 @@ async function runGit(pi: ExtensionAPI, cwd: string, args: string[]): Promise<st
   return result.stdout ?? "";
 }
 
-async function makeHooksPath(pi: ExtensionAPI, root: string): Promise<string> {
+async function makeHooksPath(pi: ExtensionAPI, root: string): Promise<string | undefined> {
   const configured = await pi.exec("git", ["config", "--path", "--get", "core.hooksPath"], { cwd: root });
   if (configured.killed) throw new Error("git config core.hooksPath was interrupted");
   if (configured.code !== 0 && configured.code !== 1) {
     throw new Error(configured.stderr?.trim() || `git config core.hooksPath failed with exit code ${configured.code}`);
   }
+  if (configured.code === 0 && !configured.stdout?.trim()) return undefined;
   const configuredPath = configured.stdout?.trim();
-  const hooksDirectory = configured.code === 0 && configuredPath
-    ? resolve(root, configuredPath)
+  const hooksDirectory = configured.code === 0
+    ? resolve(root, configuredPath!)
     : resolve(root, (await runGit(pi, root, ["rev-parse", "--git-path", "hooks"])).trim());
   const temporary = await mkdtemp(join(tmpdir(), "omp-autogit-hooks-"));
   try {
@@ -179,6 +180,8 @@ async function makeHooksPath(pi: ExtensionAPI, root: string): Promise<string> {
     throw error;
   }
 }
+
+
 
 
 async function currentHead(pi: ExtensionAPI, cwd: string): Promise<string> {
@@ -434,7 +437,10 @@ async function commitTask(
     if (chosen.some(entry => !entry)) throw new Error("Selected path disappeared from the candidate set");
     const selectedEntries = chosen as GitStatusEntry[];
     const untrackedPaths = selectedEntries.filter(entry => entry.untracked).map(entry => entry.path);
-    if (config.skipPrePostCommitHooks) temporaryHooksPath = await makeHooksPath(pi, baseline.root);
+    if (config.skipPrePostCommitHooks) {
+      temporaryHooksPath = await makeHooksPath(pi, baseline.root);
+      if (temporaryHooksPath === undefined) return;
+    }
     if (untrackedPaths.length > 0) {
       addedUntrackedPaths = untrackedPaths;
       await runGit(pi, baseline.root, ["--literal-pathspecs", "add", "--", ...untrackedPaths]);
